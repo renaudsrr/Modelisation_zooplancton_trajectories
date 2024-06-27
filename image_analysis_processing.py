@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 Script complementary of script analyse_traj and script_model for deduct some swimming parameters of Scapholeberis mucronata.
 
@@ -13,6 +14,8 @@ History of modifications
 Infos Trackpy at https://soft-matter.github.io/trackpy/dev/tutorial/walkthrough.html
 """
 
+
+
 # =============================================================================
 # Packages
 # =============================================================================
@@ -20,7 +23,12 @@ from __future__ import division, unicode_literals, print_function  # for compati
 
 import sys
 
+# connection cluster à distance
+connection_cluster = True
+
 import matplotlib as mpl
+if connection_cluster:
+    mpl.use('agg')
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -30,31 +38,33 @@ from pandas import DataFrame, Series  # for convenience
 import pims
 import trackpy as tp
 
-
-
 # =============================================================================
 # Initialisation
 # =============================================================================
 mpl.rc('figure',  figsize=(10, 5))
 mpl.rc('image', cmap='gray')
 
-# =============================================================================
-# Parameters of script
-# =============================================================================
-
 test_param = False # if we need tp.locate
-
 
 # =============================================================================
 # Import photos
 # =============================================================================
 
 # indiquez ici le nom du dossier à traiter (AAMMJJ)
-file_photos = "240516_expe_2"
-file_photos_scale_bar = "240514"
 
-# connection cluster à distance
-connection_cluster = False
+# file_photos = "240514_expe_1"
+# file_photos = "240516_expe_2"
+# file_photos = "240523_expe_3"
+# file_photos = "240524_expe_4_1"
+file_photos = "240528_expe_5"
+
+# parametres de traitement d'images
+var_file = 100 # 
+lim = 4000
+lim_med = 300 #100
+display_label = False
+
+file_photos_scale_bar = "240514"
 
 if not connection_cluster:
     path_photos = "D:/CODE_stage/photos/" + file_photos
@@ -62,14 +72,14 @@ if not connection_cluster:
     output_trajectories = "D:/CODE_stage/fichiers"
     output_figures = "D:/CODE_stage/figures"
 else:
-    path_photos = "/home/reserre/data/240516_expe_2/" + file_photos
-    path_photo_scale = "/home/reserre/data/scale_bar/"
+    path_photos = "/home/reserre/photos/" + file_photos
+    # path_photo_scale = "/home/reserre/"
     output_trajectories = "/home/reserre/output_fichiers/"
     output_figures = "/home/reserre/output_figures/"
     
 
 frames = pims.open(path_photos + '/*.tiff')
-# scale = pims.open(path_photo_scale + file_photos_scale_bar + ".tiff")
+scale = pims.open(path_photo_scale + file_photos_scale_bar + ".tiff")
 
 pixel_size_mm = 1/25
 micron_par_pixels = (10**(-3))/pixel_size_mm
@@ -82,23 +92,18 @@ frames_par_sec = 27
 fig, axes = plt.subplots(1, 2, figsize=(15, 5))
 axes[0].imshow(frames[1]) # first image
 axes[1].imshow(frames[-1]) # last image
-# axes[2].imshow(scale[0]) # scale
+axes[2].imshow(scale[0]) # scale
 plt.tight_layout()
 
-if not connection_cluster:
-    plt.savefig(output_figures + f'verif_img_{file_photos}.png', dpi=300, pad_inches=0.1)
-    plt.show()
-else:
-    plt.savefig(output_figures + 'verif_img_{}.png'.format(file_photos), dpi=300, pad_inches=0.1)
+plt.savefig(output_figures + f'verif_img_{file_photos}.png', dpi=300, pad_inches=0.1)
+
 
 # =============================================================================
 # Normalisation img par mediane
 # =============================================================================
-#lim = len(frames)-1
-lim = 500
 
 
-median_value = np.median(frames[0:lim],axis = 0)
+median_value = np.median(frames[0:lim_med],axis = 0)
 
 frames_flatfield = np.divide(frames[0:lim], median_value)
 
@@ -107,12 +112,9 @@ axes[0].imshow(frames_flatfield[1]) # first image
 axes[1].imshow(frames_flatfield[-1]) # last image
 plt.tight_layout()
 
-if not connection_cluster:
-    plt.savefig(output_figures + f'verif_img_normalisee_{file_photos}.png', dpi=300, pad_inches=0.1)
-    plt.show()
-else:
-    plt.savefig(output_figures + 'verif_img_normalisee_{}.png'.format(file_photos), dpi=300, pad_inches=0.1)
-    
+
+plt.savefig(output_figures + f'verif_img_normalisee_{file_photos}.png', dpi=300, pad_inches=0.1)
+
 # =============================================================================
 # Parameters particles
 # =============================================================================
@@ -153,7 +155,7 @@ print("batch ok")
 # Analyse trajectoires
 # =============================================================================
 
-memory = 3 # nbr de frame où on garde en mémoire un ind s'il disparait
+memory = 0 # nbr de frame où on garde en mémoire un ind s'il disparait
 max_deplacement = 80 # nbr de pixels max entre chaque deplacement
 
 t = tp.link(f, max_deplacement, memory=memory)
@@ -167,12 +169,15 @@ print('After:', t_filter['particle'].nunique())
 # filtre les impureté avec une grosse ocillation
 x_var_per_particle = t_filter.groupby('particle')['x'].var()
 y_var_per_particle = t_filter.groupby('particle')['y'].var()
+var_tot = 0
 var_tot = x_var_per_particle + y_var_per_particle
+
+print(var_tot)
 
 particles_ok = []
 
 for particle,var in var_tot.items():
-    if var > 0:
+    if var > var_file :
         particles_ok.append(particle)
 print(len(particles_ok))
 
@@ -181,25 +186,23 @@ mask = t_filter['particle'].isin(particles_ok)
 t_filter2 = t_filter[mask]
 
 # conversion en mm
+
 t_filter2['x'] = t_filter2['x'] * pixel_size_mm
 t_filter2['y'] = t_filter2['y'] * pixel_size_mm
 
 # faie variance pour éliminer petites trajectoires
 
 # plot trajectoires
-ax = tp.plot_traj(t_filter2)
-if not connection_cluster:
-    ax.figure.savefig(output_figures + f'trajectoires_{file_photos}.png', dpi=300, pad_inches=0.1)
-    plt.show()
-else:
-    ax.figure.savefig(output_figures + 'trajectoires_{}.png'.format(file_photos), dpi=300, pad_inches=0.1)
-# ax = plt.gca()
-# ax.set_xlabel('x (mm)') # comment changer le nom des axes en mm ??
-# ax.set_ylabel('y (mm)')
+plt.close('all')
 
+fig, ax = plt.subplots()
+
+# Tracer les trajectoires sur la nouvelle figure
+tp.plot_traj(t_filter2, ax=ax,label=display_label)
+
+fig.savefig(output_figures + f'trajectoires_{file_photos}.png', dpi=300, pad_inches=0.1)
 
 # save en csv pour pouvoir l'utiliser dans analyse_traj
 t_filter2.to_csv(output_trajectories + f"infos_particles_{file_photos}.csv", index=False)
+
 # np.save(output_trajectories + f"infos_particles_{file_photos}",t_filter)
-
-
