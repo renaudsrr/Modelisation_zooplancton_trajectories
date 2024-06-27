@@ -32,6 +32,7 @@ Displaying the **distributions** of the 4 swimming parameters:
 2. *print_graphs* : displays the distributions of the swimming parameters
 
 Analysis of the **3 quantitative parameters** is done with the functions:
+
 => **MSD** : 
 - *fit_powerlaw* : a copy of a trackpy function to perform a linear regression in log-log dimensions and retrieve the distribution parameters of the power law MSD = A.t^n
 - *calc_MSD* : calculates the MSD for a trajectory
