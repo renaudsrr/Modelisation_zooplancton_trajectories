@@ -1,67 +1,70 @@
-### Modèle permettant la construction de trajectoires auto évitantes en 2 dimensions et l'analyse quantitatives de ces trajectoires.
+# Model for Building Self-Avoiding Trajectories in 2D and Quantitative Analysis of These Trajectories
 
-Auteur : Renaud SERRE 
-Date création : 15.04.2024
+Author: Renaud SERRE
 
-L'objectif est de comparer ce modèle général ([nom model]) à un cas biologique d'acquisition de ressource en 2 dimensions chez Scapholeberis mucronata, un zooplancton se nourrissant de la matière organique à l'interface entre l'air et l'eau. 2 autres scripts permettent respectivement l'obtention des trajectoires expérimentales ([nom script]) et l'analyse des paramètres quantitatifs des trajectoires et des paramètres de nages instantanés de S. mucronata.
+Creation Date: 15.04.2024
+Last Modified: 27/06/2024
 
-Les 3 scripts peuvent s'exécuter en local (paramètre connection_cluster = False) ou sur un serveur (connection_cluster = True). Dans ce cas merci de préciser les chemins d'accès pour l'obtention des figures et des données. Un paramètre "print_console" permet d'afficher ou non les données de vérification dans le terminal.
+The goal is to compare this general model (model_generate_and_analysis_trajectories.py) to a biological case of resource acquisition in 2D for Scapholeberis mucronata, a zooplankton that feeds on organic matter at the air-water interface. Two other scripts respectively allow obtaining experimental trajectories (image_analysis_processing.py) and analyzing the quantitative parameters of the trajectories and the swimming parameters of S. mucronata (analysis_trajectories.py).
 
-Les packages nécessaire pour l'exécution du code sont : 
+The three scripts can run locally (parameter connection_cluster = False) or on a server (connection_cluster = True). In this case, please specify the paths for obtaining figures and data. A "print_console" parameter allows displaying or not verification data in the terminal.
+
+The packages needed to run the code are:
 - matplotlib
 - numpy
 - pandas
 - trackpy
 - pims 
 
-Si besoin installez les dans le terminal avec  : pip install [nom package]
+If needed, install them in the terminal with: *pip install <package name>*
+For server execution, run the code as: *python3.11 <filename.py>* and add "<&>" at the end for offline execution.
 
-Dans le cas d'une exécution sur un serveur, l'exécution du code se fait sous la forme : python3.11 nom_fichier.py et ajouter "&" à la fin pour une exécution hors ligne.
+### Model_generate_and_analysis_trajectories.py
 
-### [model]
+The construction of the **trajectory generator** includes the functions:
+1. *sample_param* : draws the 4 jump parameters: angle alpha (mean var_alpha, absolute exponential distribution), length l (mean l_mean and variance l_var, log-normal distribution), pause time Tp (mean Tp_mean and variance Tp_var, log-normal distribution), and Ts = l/speed
+2. *create_tracks_sa* : builds a trajectory with m jumps based on a self-avoidance probability proba_sa.
+3. *plot_graph_traj* : displays the graphs
+4. *time_discretisation* : discretizes the theoretical trajectories based on a time step dt
 
-La construction du générateur de trajectoire se compose des fonctions : 
+Displaying the **distributions** of the 4 swimming parameters:
+1. *calc_densite_expo*, calc_densite_lognormal et calc_densite_lognormal_Th : fits of the drawn distributions
+2. *print_graphs* : displays the distributions of the swimming parameters
 
-1. sample_param : tire les 4 paramètres de saut : angle alpha (moyenne var_alpha, distribution absolue exponentielle), longueur l (moyenne l_mean et variance l_var, distribution log-normale), temps de pause Tp (moyenne Tp_mean et variance Tp_var, distribution log-normale), et Ts = l/vitesse 
-2. create_tracks_sa  pour la construction d'une trajectoire avec m saut en fonction d'une proba d'auto évitement proba_sa. 
-3. plot_graph_traj pour l'affichage du graphique
-4. time discretisation pour discretiser en fonction d'un pas de temps dt les trajectoires théoriques
+Analysis of the **3 quantitative parameters** is done with the functions:
+=> **MSD** : 
+- *fit_powerlaw* : a copy of a trackpy function to perform a linear regression in log-log dimensions and retrieve the distribution parameters of the power law MSD = A.t^n
+- *calc_MSD* : calculates the MSD for a trajectory
+- *plot_MSD_trajectory* : calculates the MSD for a given number of iterations to obtain coherent values for heatmap display
+  
+=> **Tortuosity** : 
+- *calc_tortuosity* : calculates the tortuosity of the trajectories
+  
+=> **Uptake** (resource acquisition rate) : 
+- *uptake* : calculates uptake based on a grid_precision parameter representing the division of each x and y axis to represent the scale factor (corresponding to the size of individuals in experimental analysis) and a range_radius parameter representing an individual's ability to acquire distant resources, which is a multiplicative factor of the grid_precision parameter.
 
-L'affichage des distributions des 4 paramètres de nage : 
-1. calc_densite_expo, calc_densite_lognormal et calc_densite_lognormal_Th pour retrouver les fit des distributions tirés 
-2. print_graphs pour l'affichage des distributions des paramètres de nage
+=>=> Heatmaps : 
+- *heatmap_MSD_Tortuosity_Uptake* : this function returns any value of the 3 quantitative parameters for all combinations between a self-avoidance probability and a directional persistence (var_alpha). Parameters allow changing the precision bounds of these combinations.
 
-L'analyse des paramètres quantitatifs se fait avec les fonctions : 
-=> MSD : - fit_powerlaw : copie d'une fonction de trackpy pour effectuer une régression linéaire en dimensions log-log et retrouver les paramètres de la distribution de la loi de puissance MSD = A.t^n
-	 - calc_MSD : calcule le MSD pour une trajectoire
-	 - plot_MSD_trajectory : calcule le MSD pour un nombre donné d'itération en vu d'obtenir des valeurs cohérentes 	pour l'affichage sur les cartes de chaleur
-=> Tortuosité : - calc_tortuosity : calcule la tortuosité des trajectoires
-=> Uptake (taux acquisition des ressource) : - uptake : calcule l'uptake en fonction d'un paramètre grid_precision qui représente la division de chaque axe x et y pour représenter le facteur d'échelle (correspond à la taille des individus en analyse expérimentale) et d'un paramètre range_radius qui représente la capacité d'un individu à acquérir des ressources lointaines qui représente un facteur multiplicatif du paramètre grid_precision.
+A convergence test allows using significant iteration and jump values for each combination. 
+Finally, functions create an animation in .mp4 format with a pre-installed and properly configured ffmpeg file. 
+At the very end of the program, you can change all the parameters to build and analyze the trajectories.
 
-=>=> Cartes de chaleurs : heatmap_MSD_Tortuosity_Uptake : cette fonction permet de retourner n'importe quel valeur des 3 paramètres quantitatifs pour l'ensemble des combinaisons entre une probabilité d'auto évitement et une persistance directionnelle (var_alpha). Des paramètres permettent de changer les bornes de précisions de ces combinaisons.
+### Image_analysis_processing.py
 
+For analyzing real trajectories with the scripts [] and [], please specify the folder name containing the photos in .tiff format.
 
-Un test de convergence permet d'utiliser des valeurs significatives d'itération et de sauts pour chaque combinaisons. 
+The different particle tracking parameters are refined to correspond to S. mucronata:
+var_file = 100 # movement variance of individuals => if very low, little movement so it is not an individual
+diameter = 9 # particle diameter
+minmass = 1 # minimum mass in terms of brightness => sum of px values
+noise_size = 1 # 1 by default. Gaussian blurring kernel => filters signal impurities, higher values filter larger signals
+smoothing_size = 11 # diameter by default, removes large-scale biases (e.g., luminosity gradient)
+separation = 15 # distance below which we group the same particle
 
-Enfin, des fonction permettent de créer une animation en format .mp4 grâce à un fichier ffmpeg préalablement installé et correctement configuré.
+memory = 0 # number of frames to keep an individual in memory if it disappears
+max_deplacement = 80 # maximum number of pixels between each movement
 
-A la toute fin du programme vous pouvez changer l'ensembles des paramètres permettant de construire les trajectoires et de les analyser
+### Analysis_trajectories.py
 
-### []
-
-Pour l'analyse des réelles trajectoires avec les script [] et [] merci de préciser le nom du dossier contenant les photos en format .tiff 
-
-Les différents paramètres de suivi des particules sont affiné pour correspondre à S. mucronata : 
-diameter = 9 
-minmass = 1 
-noise_size = 1 
-smoothing_size = 11 
-separation = 15
-
-memory = 0 
-max_deplacement = 80 
-
-### []
-
-Dans un premier temps on sépare les particules en fonction de leurs taille (adulte/juvéniles) selon un seuil arbitraire mass_ind_heavy = 3.8. 
-On peut maintenant retrouver le MSD pour chaque particules (fonction emsd de trackpy), leurs vitesses instantannés, l'angle de rotation instantannés (dépendant de la fréquence/s d'aquisition d'images), la tortuosité et l'uptake des réelles trajectoires trajectoires des individus)
+First, we separate particles based on their size (adult/juvenile) according to an arbitrary threshold mass_ind_heavy = 3.8. We can now retrieve the MSD for each particle (trackpy's emsd function), their instantaneous speeds, instantaneous rotation angles (depending on the image acquisition frequency/s), tortuosity, and uptake of the real trajectories of the individuals.
