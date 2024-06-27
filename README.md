@@ -57,7 +57,7 @@ For analyzing real trajectories with the scripts [] and [], please specify the f
 
 The different particle tracking parameters are refined to correspond to S. mucronata:
 
-var_file = 100 # movement variance of individuals => if very low, little movement so it is not an individual
+var_file = 100 # movement variance of individuals => if very low, little movement so it is not S. mucronata
 
 diameter = 9 # particle diameter
 
