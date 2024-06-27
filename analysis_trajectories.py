@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 Script complementary of script analyse_img and script_model for deduct some swimming parameters of Scapholeberis mucronata.
 
@@ -7,12 +8,16 @@ Creation: 30.04.2024
 
 
 History of modifications
-30.04.2024 : - creation of the script
-02.05.2024 : 
+30.04.2024 : creation of the script
+24/06/2024 : mise en forme majeur des figures
+25/06/2024 : ajout du calcul de la tortusité et de l'uptake des trajectoires'
 
 Infos Trackpy at https://soft-matter.github.io/trackpy/dev/tutorial/walkthrough.html
 
 """
+
+
+
 # =============================================================================
 # Packages
 # =============================================================================
@@ -22,6 +27,13 @@ import sys
 
 import math as mt
 import matplotlib as mpl
+
+
+# connection cluster à distance
+connection_cluster = False
+
+if connection_cluster:
+    mpl.use('agg')
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -37,17 +49,19 @@ import trackpy as tp
 mpl.rc('figure',  figsize=(10, 5))
 mpl.rc('image', cmap='gray')
 
-# connection cluster à distance
-connection_cluster = False
 
+# file = "240514_expe_1"
 file = "240516_expe_2"
+# file = "240523_expe_3"
+# file = "240524_expe_4_1"
+# file = "240528_expe_5"
 
 if not connection_cluster:
-    data_tot = pd.read_csv('D:/CODE_stage/fichiers/infos_particles_'+ file +".csv")
-    output_trajectories = "D:/CODE_stage/fichiers/"
-    output_figures = "D:/CODE_stage/figures/"
+    data_tot = pd.read_csv('C:/Users/serre/OneDrive/Bureau/STAGE/CODE/fichiers/infos_particles_'+ file +".csv")
+    output_trajectories = "C:/Users/serre/OneDrive/Bureau/STAGE/CODE/fichiers/"
+    output_figures =  "C:/Users/serre/OneDrive/Bureau/STAGE/CODE/figures/"
 else:
-    data_tot = pd.read_csv("/home/reserre/output_fichiers/" + file +".csv")
+    data_tot = pd.read_csv("/home/reserre/output_fichiers/infos_particles_" + file +".csv")
     output_trajectories = "/home/reserre/output_fichiers/"
     output_figures = "/home/reserre/output_figures/"
 
@@ -94,16 +108,16 @@ data_light.to_csv(output_trajectories + "traj_light_" + f"{file}" + ".csv", inde
 # =============================================================================
 # Calculation of MSD
 # =============================================================================
-
 #### MSD for each mass
 # heavy
+plt.close('all')
 im = tp.imsd(data_heavy, micron_par_pixels , frames_par_sec)
 em = tp.emsd(data_heavy, micron_par_pixels, frames_par_sec)
 
 fig, ax = plt.subplots()
 ax.plot(im.index, im, 'k-', alpha=0.1)
-ax.set(ylabel=r'distance (mm²)',
-       xlabel='lag time $t$ (s)')
+ax.set(ylabel=r'MSD (mm²)',
+       xlabel='$t$ (s)')
 ax.set_xscale('log')
 ax.set_yscale('log')
 param_MSD = tp.utils.fit_powerlaw(em,color="black",plot=False)    
@@ -111,19 +125,21 @@ n_MSD = float(param_MSD['n'])
 A_MSD = float(param_MSD['A'])
 n_round = str(round(n_MSD,2))
 A_round = round(A_MSD,4)
-ax.text(0.05, 0.01, fr'$y = {A_round} \cdot x^{{{n_round}}}$', color='black', fontsize=15)
+ax.text(0.05, 0.01, fr'$MSD = {A_round} \cdot t^{{{n_round}}}$', color='black', fontsize=20)
 tp.utils.fit_powerlaw(em,color="black",plot=True)   
 
-fig.savefig(output_figures + 'msd_heavy.png', dpi=300, pad_inches=0.1)
+
+fig.savefig(output_figures + f'msd_heavy_{file}.png', dpi=300, pad_inches=0.1)
 
 # light
+plt.close('all')
 im = tp.imsd(data_light, micron_par_pixels , frames_par_sec)
 em = tp.emsd(data_light, micron_par_pixels, frames_par_sec)
 
 fig, ax = plt.subplots()
 ax.plot(im.index, im, 'k-', alpha=0.1)
-ax.set(ylabel=r'distance (mm²)',
-       xlabel='lag time $t$ (s)')
+ax.set(ylabel=r'MSD (mm²)',
+       xlabel='$t$ (s)')
 ax.set_xscale('log')
 ax.set_yscale('log')
 param_MSD = tp.utils.fit_powerlaw(em,color="black",plot=False)    
@@ -131,19 +147,20 @@ n_MSD = float(param_MSD['n'])
 A_MSD = float(param_MSD['A'])
 n_round = str(round(n_MSD,2))
 A_round = round(A_MSD,4)
-ax.text(0.05, 0.01, fr'$y = {A_round} \cdot x^{{{n_round}}}$', color='black', fontsize=15)
+ax.text(0.05, 0.01, fr'$MSD = {A_round} \cdot t^{{{n_round}}}$', color='black', fontsize=20)
 tp.utils.fit_powerlaw(em,color="black",plot=True)   
 
-fig.savefig(output_figures + 'msd_light.png', dpi=300, pad_inches=0.1)
+fig.savefig(output_figures + f'msd_light_{file}.png', dpi=300, pad_inches=0.1)
 
 # all
+plt.close('all')
 im = tp.imsd(data_tot, micron_par_pixels , frames_par_sec)
 em = tp.emsd(data_tot, micron_par_pixels, frames_par_sec)
 
 fig, ax = plt.subplots()
 ax.plot(im.index, im, 'k-', alpha=0.1)
-ax.set(ylabel=r'distance (mm²)',
-       xlabel='lag time $t$ (s)')
+ax.set(ylabel=r'MSD (mm²)',
+       xlabel='$t$ (s)')
 ax.set_xscale('log')
 ax.set_yscale('log')
 param_MSD = tp.utils.fit_powerlaw(em,color="black",plot=False)    
@@ -151,12 +168,10 @@ n_MSD = float(param_MSD['n'])
 A_MSD = float(param_MSD['A'])
 n_round = str(round(n_MSD,2))
 A_round = round(A_MSD,4)
-ax.text(0.05, 0.01, fr'$y = {A_round} \cdot x^{{{n_round}}}$', color='black', fontsize=15)
+ax.text(0.05, 0.01, fr'$MSD = {A_round} \cdot t^{{{n_round}}}$', color='black', fontsize=20)
 tp.utils.fit_powerlaw(em,color="black",plot=True)   
 
-fig.savefig(output_figures + 'msd_tot.png', dpi=300, pad_inches=0.1)
-
-
+fig.savefig(output_figures + f'msd_tot_{file}.png', dpi=300, pad_inches=0.1)
 
 # =============================================================================
 # Display instantaneous speed on graph
@@ -175,17 +190,13 @@ def calculate_velocities(data, micron_par_pixels, frames_par_sec):
     return data_sorted['velocity']
 
 # Calculate velocities for heavy and light particles
+velocity_tot = calculate_velocities(data_tot, micron_par_pixels, frames_par_sec)
 velocities_heavy = calculate_velocities(data_heavy, micron_par_pixels, frames_par_sec)
 velocities_light = calculate_velocities(data_light, micron_par_pixels, frames_par_sec)
 
-# =============================================================================
-# Definir jump
-# =============================================================================
-
-
 
 # =============================================================================
-# Calculation of alpha and l
+# Calculation of instantaneous parameters
 # =============================================================================
 
 def angle_trig(a, b, c):
@@ -265,11 +276,6 @@ def calc_l(data):
 length_per_particle = calc_l(data_tot)
 angles_per_particle = calc_angles(data_tot)
 
-
-# =============================================================================
-# all param + export
-# =============================================================================
-
 all_length = [length for liste_length in length_per_particle.values() for length in liste_length]
 all_angles = [angle for liste_angles in angles_per_particle.values() for angle in liste_angles]
 
@@ -292,216 +298,245 @@ def calc_densite_lognormal(x, esp, var):
     
     return y
 
-def plot_distrib_l_alpha(data, data_name, by_particule):
+def plot_distrib_l_alpha(data_tot, data_light, data_heavy):
     
-    angles_per_particle = calc_angles(data)
-    length_per_particle = calc_l(data)
-
-    nb_particules = len(np.unique(data['particle']))
-    indice = 0
+    angles_per_particle_all = calc_angles(data_tot)
+    angles_per_particle_light = calc_angles(data_light)
+    angles_per_particle_heavy = calc_angles(data_heavy)
+    
+    velocities_all = calculate_velocities(data_tot, micron_par_pixels, frames_par_sec)
+    velocities_light = calculate_velocities(data_light, micron_par_pixels, frames_par_sec)
+    velocities_heavy = calculate_velocities(data_heavy, micron_par_pixels, frames_par_sec)
     
     # Distributions totales
-    all_length = [length for liste_length in length_per_particle.values() for length in liste_length]
-    all_angles = [angle for liste_angles in angles_per_particle.values() for angle in liste_angles]
-    all_angles_abs = [abs(x) for x in all_angles]
     
-    opac = 0.7 # définition de l'opacité
+    all_angles_all = [angle for liste_angles in angles_per_particle_all.values() for angle in liste_angles]
+    all_angles_light = [angle for liste_angles in angles_per_particle_light.values() for angle in liste_angles]
+    all_angles_heavy = [angle for liste_angles in angles_per_particle_heavy.values() for angle in liste_angles]
+    
+    all_angles_all_abs = [abs(x) for x in all_angles_all]
+    all_angles_light_abs = [abs(x) for x in all_angles_light]
+    all_angles_heavy_abs = [abs(x) for x in all_angles_heavy]
+    
+    opac = 0.5 # définition de l'opacité
     bins = 300 # nbr barres
     
-    if by_particule:
-        fig, axs = plt.subplots(nb_particules, 4, figsize=(15, 6*nb_particules))  # Création de la figure avec plusieurs sous-graphiques
-        
-        particles = np.unique(data["particle"]).tolist()    
+    ### alpha ----------------------------------------------------------------------------
+    plt.close('all')
+
+    var_alpha_light = 1/np.mean(all_angles_light_abs)
+    var_alpha_heavy = 1/np.mean(all_angles_heavy_abs)
     
-        for particle in particles:
-            data_particle = data[data['particle'] == particle]
-            
-            velocities_particle = calculate_velocities(data_particle, micron_par_pixels, frames_par_sec)
-            
-            ax = axs[indice, 0]
-            sc = ax.scatter(data_particle['x'], data_particle['y'], c=velocities_particle, cmap='viridis')
-            # plt.plot(data_particle['x'], data_particle['y'],color="black",alpha=0.2)
-            plt.colorbar(sc, label='Velocity (mm/s)')
-            ax.set_xlabel('X position (mm)')
-            ax.set_ylabel('Y position (mm)')
-            # ax.set_title(f'velocities particle : {particle}  ({data_name})')
-            
-            indice += 1
+    x_values_light = np.linspace(0, max(all_angles_light), 1000)
+    y_values_light = densite_expo(x_values_light, var_alpha_light)
+
+    x_values_heavy = np.linspace(0, max(all_angles_heavy), 1000)
+    y_values_heavy = densite_expo(x_values_heavy, var_alpha_heavy)
+
+    plt.subplot(1,4,1)
+    plt.xlabel('Radians',fontsize=15)
+    plt.ylabel('Densité',fontsize=15)
     
-        indice = 0    
+    plt.hist(all_angles_heavy, density=True, alpha=opac, color="grey", label="Adultes",bins=bins)
+    plt.hist(all_angles_light, density=True, alpha=opac-0.25, color="grey", label="Juvéniles",bins=bins)
     
-        # Distributions d'angles
-        for particle, liste_angles in angles_per_particle.items():
-            print(particle, len(liste_angles))
-            
-            ax = axs[indice, 1]
-            liste_angles = angles_per_particle[particle]
-            
-            # ax.set_title(f'Distribution particule : {particle} ({data_name})')
-            ax.set_xlabel('radians')
-            ax.set_ylabel('density')
-            ax.hist(liste_angles, density=True, alpha=opac, color="red", label="Alpha Distribution",bins=bins)
-            
-            indice += 1
-        
-        indice = 0
-        
-        # Distributions de longueurs
-        for particle, liste_length in length_per_particle.items():
-            print(particle, len(liste_length))
-            
-            ax = axs[indice, 2]  
-            liste_length = length_per_particle[particle]
-            
-            ax.set_title(f'Distribution particule : {particle} ({data_name})')
-            ax.set_xlabel('mm')
-            ax.set_ylabel('density')
-            ax.hist(liste_length, density=True, alpha=opac, color="blue", label="Length Distribution",bins=bins)
-            
-            indice += 1
-            
+    plt.plot(x_values_light, y_values_light/2, color='grey',alpha=opac)
+    plt.plot(-x_values_light, y_values_light/2, color='grey',alpha=opac)
+    
+    plt.plot(x_values_heavy, y_values_heavy/2, color='grey')
+    plt.plot(-x_values_heavy, y_values_heavy/2, color='grey')
+  
+    var_alpha_round_light = round(var_alpha_light,3)
+    var_alpha_round_heavy = round(var_alpha_heavy,3)
+    
+    # plt.text(-2.5,0.5, f'βi = {var_alpha_round_light}', color='black', fontsize=14)
+    # plt.text(-2.5,1, f'βi = {var_alpha_round_heavy}', color='black', fontsize=14)
+             
+    plt.legend(loc="best")
 
-    # distribution totale 
-    if by_particule:
-        ### alpha ----------------------------------------------------------------------------
-        var_alpha = 1/np.mean(all_angles_abs)
-        
-        x_values = np.linspace(0, max(all_angles), 1000)
-        y_values = densite_expo(x_values, var_alpha)
-        
-        ax_alpha_total = axs[0, 3] 
-        ax_alpha_total.set_title(f'Distribution totale d\'angles ({data_name})')
-        ax_alpha_total.set_xlabel('radians')
-        ax_alpha_total.set_ylabel('density')
-        ax_alpha_total.hist(all_angles, density=True, alpha=opac+0.15, color="red", label="Alpha Distribution",bins=bins)
-        ax_alpha_total.plot(x_values/2, y_values, color='red', label='Densité exponentielle ajustée')
-        ax_alpha_total.plot(-x_values/2, y_values, color='red')
-        plt.legend()
-        
-        ### l -------------------------------------------------------------------------------
-        l_mean = np.mean(all_length)
-        l_var = np.var(all_length)
-        
-        x_values = np.linspace(0, max(all_length), 1000)
-        y_values = calc_densite_lognormal(x_values,l_mean,l_var)
-        
-        ax_length_total = axs[1, 3]
-        ax_length_total.set_title(f'Distribution totale de longueurs ({data_name})')
-        ax_length_total.set_xlabel('mm')
-        ax_length_total.set_ylabel('density')
-        ax_length_total.hist(all_length, density=True, alpha=opac+0.15, color="blue", label="Length Distribution",bins=bins*2)
-        ax_length_total.plot(x_values, y_values, color='blue', label='Densité log-normale ajustée')
-        ax_length_total.set_xlim([0, 3])
-        plt.legend()
-        
-        plt.savefig(output_figures + 'param_particles_separates.png', dpi=300, pad_inches=0.1)
+    ### vit instant ------------------------------------------------------------------------------
+    
+    plt.subplot(1,4,2)
+    
+    plt.xlim([0,6.5])
+    plt.xlabel('mm/s',fontsize=15)
 
-        
-    else:
-        ### alpha ----------------------------------------------------------------------------
-        var_alpha = 1/np.mean(all_angles_abs)
-        print(var_alpha)
-        
-        x_values = np.linspace(0, max(all_angles), 1000)
-        y_values = densite_expo(x_values, var_alpha)
-        
-        plt.subplot(1,2,1)
-        # plt.title(f'Distrib alpha ({data_name})')
-        plt.xlabel('radians')
-        plt.ylabel('density')
-        plt.hist(all_angles, density=True, alpha=opac-0.15, color="grey", label="Alpha Distribution",bins=bins)
-        plt.plot(x_values, y_values/2, color='grey', label='Densité exponentielle ajustée')
-        plt.plot(-x_values, y_values/2, color='grey')
-        
-        var_alpha_round = round(var_alpha,2)
-        plt.text(-2.5,0.6, f'β = {var_alpha_round}',
-                 color='black', fontsize=15)
-        #plt.legend()
-        plt.tight_layout()
+    plt.hist(velocities_heavy, density=True, alpha=opac, color="grey", label="Adultes",bins=bins*3)
+    plt.hist(velocities_light, density=True, alpha=opac-0.25, color="grey", label="Juvéniles",bins=bins*3)
 
-        ### l ------------------------------------------------------------------------------
-        l_mean = np.mean(all_length)
-        l_var = np.var(all_length)
-        print(l_mean,l_var)
-        
-        x_values = np.linspace(0, max(all_length), 1000)
-        y_values = calc_densite_lognormal(x_values,l_mean,l_var)
-        
-        plt.subplot(1,2,2)
-        # plt.title(f'Distrib l ({data_name})')
-        plt.xlabel('mm')
-        plt.ylabel('density')
-        plt.hist(all_length, density=True, alpha=opac-0.15, color="grey", label="Length Distribution",bins=bins*3)
-        plt.plot(x_values, y_values, color='grey', label='Densité log-normale ajustée')
-        plt.xlim([0, 3])
-        # plt.legend()
-        plt.tight_layout()
-        
-        l_mean_round = round(l_mean,2)
-        l_var_round = round(l_var,2)
+    
+    plt.legend()
+    
+    ### All ------------------------------------------------------------------------------
+    
+    plt.subplot(1,4,3)
+    
+    plt.xlabel('Radians',fontsize=15)
+    
+    var_alpha_all = 1/np.mean(all_angles_all_abs)
+    plt.hist(all_angles_all, density=True, alpha=opac-0.1, color="black", label="Total",bins=bins)
+    
+    x_values_all = np.linspace(0, max(all_angles_all), 1000)
+    y_values_all = densite_expo(x_values_all, var_alpha_all)
+    
+    plt.plot(x_values_all, y_values_all/2, color='black')
+    plt.plot(-x_values_all, y_values_all/2, color='black')
 
-        plt.text(0.5,9, f'σ = {l_var_round}\nµ={l_mean_round}',
-                 color='black', fontsize=15)
-        
-        plt.savefig(output_figures + 'param_all_particles.png', dpi=300, pad_inches=0.1)
+    var_alpha_round_all = round(var_alpha_all,3)
+    
+    # plt.text(-2.5,1, f'βi = {var_alpha_round_all}', color='black', fontsize=20)
+    
+    plt.legend()
+
+         
+    plt.subplot(1,4,4)
+    
+    plt.xlim([0,6.5])
+    plt.xlabel('mm/s',fontsize=15)
+    # plt.ylabel('Densité',fontsize=20)
+    
+    plt.hist(velocities_all, density=True, alpha=opac-0.1, color="black", label="Total",bins=bins*3)
+    
+    plt.legend()
     
     plt.tight_layout()
-    plt.show()
+    plt.savefig(output_figures + f'NEW_____param_all_particles_{file}.png', dpi=300, pad_inches=0.1)
 
-
-by_particule = False
-plot_distrib_l_alpha(data_tot, "all", by_particule)
-plot_distrib_l_alpha(data_light, "data light",by_particule) 
-plot_distrib_l_alpha(data_heavy, "data heavy", by_particule)
-
-
-
+plot_distrib_l_alpha(data_tot, data_light, data_tot)
+plot_distrib_l_alpha(data_tot, data_light, data_light)
+plot_distrib_l_alpha(data_tot, data_light, data_heavy)
+plt.close('all')
+print("END")
 
 # =============================================================================
-# Calculation of Tp
+# Calcul de la tortuosité et de l'uptake des particules
 # =============================================================================
 
 
 
-# =============================================================================
-# Calculation of Th
-# =============================================================================
+def calc_Tortuosity(data):
+    particles = np.unique(data['particle']).tolist()
+    tortuosities = {}
+    
+    for particle in particles:
+        particle_data = data[data['particle'] == particle]
+        x = particle_data['x'].tolist()
+        y = particle_data['y'].tolist()
+        
+        # Calculate the shortest length
+        shorter_length = np.sqrt((x[-1] - x[0])**2 + (y[-1] - y[0])**2)
+        
+        # Calculate the total length
+        total_length = np.sum(np.sqrt(np.diff(x)**2 + np.diff(y)**2))
+        
+        tortuosity = total_length / shorter_length
+
+        tortuosities[particle] = tortuosity
+    
+    return tortuosities,particles
+
+tortuosities, particles = calc_Tortuosity(data_tot)
+print(tortuosities)
+tortuosities_list = list(tortuosities.values())
+
+plt.close("all")
+plt.hist(tortuosities_list,bins=len(particles)*5)
+plt.savefig(output_figures + 'distrib_T.png', dpi=300, pad_inches=0.1)
+plt.show()
+med_T_Sm = np.median(tortuosities_list)
+max_frames = max(data_tot['frame'])
+print("médiane tortuosité :", med_T_Sm, f"sur {max_frames} frames")
 
 
 
 
 
+def calc_uptake(data, plot_uptake,range_radius):
+    particles = np.unique(data['particle']).tolist()
+    uptakes = {}
+    max_frames = max(data['frame'])
+    
+
+    
+    for particle in particles:
+        particle_data = data[data['particle'] == particle]
+        x = particle_data['x'].tolist()
+        y = particle_data['y'].tolist()
+        
+        
+        # calcul precision uptake en fonction de la taille des particules 
+        grid_precision = np.mean(particle_data['size'])
+        
+        min_x, max_x = min(x), max(x)
+        min_y, max_y = min(y), max(y)
+        
+        taille_x_grid = int((max_x - min_x) * grid_precision) + 1
+        taille_y_grid = int((max_y - min_y) * grid_precision) + 1
+        
+        grid = np.ones((taille_y_grid, taille_x_grid), dtype=bool)
+        grid = grid.astype(int) # transformation boolean into 0 and 1
+        
+        for pos_x, pos_y in zip(x, y):
+            grid_x = int((pos_x - min_x) * grid_precision)
+            grid_y = int((max_y - pos_y) * grid_precision)
+            
+            # Mark the cells within the specified range
+            for radius_x in range(-range_radius, range_radius):
+                for radius_y in range(-range_radius, range_radius):
+                    
+                    pos_x = grid_x + radius_x
+                    pos_y = grid_y + radius_y
+                    
+                    if 0 <= pos_x < taille_x_grid and 0 <= pos_y < taille_y_grid:
+                        # grid shape = grid[y,x]
+                        grid[pos_y, pos_x] = False
+        
+        # count number of sqaure reached
+        U = np.count_nonzero(grid == 0) # number of 0
+        uptakes[particle] = U
+    
+        print("\n","\n")
+        print(f"Equivalent matrice particule {particle} :")
+        print(grid)
+        print(f"Nombre de case atteintes particule {particle} : ",U, f" sur {max_frames} frames.")
+        
+        
+        if plot_uptake:
+            plt.close("all")
+            plt.imshow(grid, cmap='gray', origin='upper', extent=[min_x, max_x, min_y, max_y], alpha=0.5)
+                
+            plt.plot(x, y, linestyle = '-', color = 'black')
+        
+            plt.title('Uptake')
+            plt.xlabel('x (mm)')
+            plt.ylabel('y (mm)')
+            plt.gca().set_aspect('equal')
+            plt.tight_layout()
+            plt.savefig(output_figures + "uptakes_all_particles/" + f'uptake_{particle}.png', dpi=300, pad_inches=0.1)
+            plt.show()
+            
+    return uptakes, particles
+
+plot_uptake = True
+range_radius = 1
+
+uptakes, particles = calc_uptake(data_tot, plot_uptake, range_radius)
+print(uptakes)
+uptakes_list = list(tortuosities.values())
+max_U = max(uptakes_list)
+print("max_U = ", max_U)
+uptakes_list = uptakes_list/max_U
+
+
+plt.close("all")
+
+plt.hist(uptakes_list,bins=len(particles)*5)
+
+plt.savefig(output_figures + 'distrib_U.png', dpi=300, pad_inches=0.1)
+plt.show()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+med_U_Sm = np.median(uptakes_list)
+max_frames = max(data_tot['frame'])
+print("médiane uptake :", med_U_Sm, f"sur {max_frames} frames")
