@@ -56,14 +56,21 @@ At the very end of the program, you can change all the parameters to build and a
 For analyzing real trajectories with the scripts [] and [], please specify the folder name containing the photos in .tiff format.
 
 The different particle tracking parameters are refined to correspond to S. mucronata:
+
 var_file = 100 # movement variance of individuals => if very low, little movement so it is not an individual
+
 diameter = 9 # particle diameter
+
 minmass = 1 # minimum mass in terms of brightness => sum of px values
+
 noise_size = 1 # 1 by default. Gaussian blurring kernel => filters signal impurities, higher values filter larger signals
+
 smoothing_size = 11 # diameter by default, removes large-scale biases (e.g., luminosity gradient)
+
 separation = 15 # distance below which we group the same particle
 
 memory = 0 # number of frames to keep an individual in memory if it disappears
+
 max_deplacement = 80 # maximum number of pixels between each movement
 
 ### Analysis_trajectories.py
