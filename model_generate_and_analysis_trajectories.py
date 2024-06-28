@@ -1430,8 +1430,10 @@ if create_trajectory:
     # Uptake matrix
     plot_uptake = True # ================================================================================
     if plot_uptake:
-        grid_precision = 2 # precision of the matrix representing the trajectory, fraction of each integer x and y for axis (mm)
+        grid_precision = 4 # precision of the matrix representing the trajectory, fraction of each integer x and y for axis (mm)
+        # grid_precision entre 3 et 4 pour une bonne précision sans trop de perte d'information
         range_radius = 1  # radius of action to expand the width of the consumed zone (default = 1)
+        # range_radius arbitraire entre 1 et 2
         
         # -------------------------------------------------------------------------
         tortuosity = calc_Tortuosity(traj_x, traj_y)
