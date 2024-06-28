@@ -451,12 +451,10 @@ print("médiane tortuosité :", med_T_Sm, f"sur {max_frames} frames")
 
 
 
-def calc_uptake(data, plot_uptake,range_radius):
+def calc_uptake(data, plot_uptake,range_radius_Sm):
     particles = np.unique(data['particle']).tolist()
     uptakes = {}
     max_frames = max(data['frame'])
-    
-
     
     for particle in particles:
         particle_data = data[data['particle'] == particle]
@@ -465,7 +463,8 @@ def calc_uptake(data, plot_uptake,range_radius):
         
         
         # calcul precision uptake en fonction de la taille des particules 
-        grid_precision = np.mean(particle_data['size'])
+        grid_precision = 3
+        range_radius = np.mean(particle_data['size'])*range_radius_Sm
         
         min_x, max_x = min(x), max(x)
         min_y, max_y = min(y), max(y)
@@ -518,9 +517,9 @@ def calc_uptake(data, plot_uptake,range_radius):
     return uptakes, particles
 
 plot_uptake = True
-range_radius = 1
+range_radius_Sm = 1
 
-uptakes, particles = calc_uptake(data_tot, plot_uptake, range_radius)
+uptakes, particles = calc_uptake(data_tot, plot_uptake, range_radius_Sm)
 print(uptakes)
 uptakes_list = list(tortuosities.values())
 max_U = max(uptakes_list)
